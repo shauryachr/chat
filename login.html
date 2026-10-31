@@ -4,11 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log in · Connapp</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: linear-gradient(135deg, #e8f0fe 0%, #f0f4f8 50%, #ffffff 100%);
       color: #1a1a1a;
       min-height: 100vh;
@@ -36,7 +35,6 @@
       color: #fff; font-size: 14px;
     }
     .home-link { font-size: 15px; color: #4b5563; }
-    .home-link:hover { color: #111; }
     main {
       flex: 1;
       display: flex;
@@ -47,25 +45,21 @@
     .card {
       background: #fff;
       border-radius: 20px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.08);
       width: 100%;
       max-width: 400px;
       padding: 36px 32px 28px;
-      border: 1px solid rgba(0,0,0,0.04);
     }
     .card-label { font-size: 13px; color: #9ca3af; margin-bottom: 8px; }
     .card h1 {
       font-size: 28px;
       font-weight: 700;
-      letter-spacing: -0.5px;
       margin-bottom: 8px;
-      color: #111;
     }
     .card-desc {
       font-size: 14px;
       color: #6b7280;
-      margin-bottom: 28px;
-      line-height: 1.5;
+      margin-bottom: 24px;
     }
     label {
       display: block;
@@ -74,9 +68,8 @@
       color: #374151;
       margin-bottom: 6px;
     }
-    .field { margin-bottom: 18px; }
-    input[type="email"],
-    input[type="password"] {
+    .field { margin-bottom: 16px; }
+    input {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid #e5e7eb;
@@ -85,39 +78,21 @@
       background: #f9fafb;
       outline: none;
     }
-    input:focus {
-      border-color: #93c5fd;
-      background: #fff;
-    }
-    .password-wrap { position: relative; }
-    .password-wrap input { padding-right: 44px; }
-    .toggle-pw {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #9ca3af;
-      font-size: 16px;
-      padding: 4px;
-    }
+    input:focus { border-color: #93c5fd; background: #fff; }
     .btn {
       display: block;
       width: 100%;
       padding: 14px;
       border-radius: 999px;
       font-size: 15px;
-      font-weight: 550;
+      font-weight: 600;
       border: none;
       cursor: pointer;
       background: #1a56db;
       color: #fff;
       margin-top: 8px;
     }
-    .btn:hover { opacity: 0.92; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.6; cursor: wait; }
     .footer-link {
       text-align: center;
       margin-top: 22px;
@@ -125,17 +100,31 @@
       color: #6b7280;
     }
     .footer-link a { color: #111; font-weight: 500; }
-    .error-msg {
+    #msg {
       display: none;
-      background: #fef2f2;
-      color: #b91c1c;
       font-size: 13px;
       padding: 10px 12px;
       border-radius: 10px;
       margin-bottom: 16px;
+    }
+    #msg.error {
+      display: block;
+      background: #fef2f2;
+      color: #b91c1c;
       border: 1px solid #fecaca;
     }
-    .error-msg.show { display: block; }
+    #msg.ok {
+      display: block;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    #status {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 12px;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
@@ -153,25 +142,20 @@
       <h1>Log in</h1>
       <p class="card-desc">Use the email you used when you created your account.</p>
 
-      <div id="error" class="error-msg"></div>
+      <div id="status">Loading…</div>
+      <div id="msg"></div>
 
-      <!-- method=post + no name attrs = password never appears in URL even if JS fails -->
-      <form id="login-form" method="post" action="javascript:void(0)" onsubmit="return handleLogin(event)">
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" required autocomplete="email" />
-        </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" autocomplete="email" placeholder="you@example.com" />
+      </div>
 
-        <div class="field">
-          <label for="password">Password</label>
-          <div class="password-wrap">
-            <input type="password" id="password" required autocomplete="current-password" />
-            <button type="button" class="toggle-pw" onclick="togglePw()">👁</button>
-          </div>
-        </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
 
-        <button type="submit" class="btn" id="submit-btn">Log in</button>
-      </form>
+      <button type="button" class="btn" id="loginBtn">Log in</button>
 
       <div class="footer-link">
         New to Connapp? <a href="signup.html">Create account</a>
@@ -179,78 +163,147 @@
     </div>
   </main>
 
+  <!-- Load Supabase after the page, then wire the button -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://ktoyxbqybthleiiiiruv.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
+    (function () {
+      var STATUS = document.getElementById('status');
+      var MSG = document.getElementById('msg');
+      var BTN = document.getElementById('loginBtn');
+      var EMAIL = document.getElementById('email');
+      var PASS = document.getElementById('password');
 
-    let supabase = null;
-    try {
-      if (!window.supabase) throw new Error('Supabase library failed to load. Check your internet connection.');
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch (err) {
-      document.getElementById('error').textContent = err.message;
-      document.getElementById('error').classList.add('show');
-    }
+      var SUPABASE_URL = 'https://ktoyxbqybthleiiiiruv.supabase.co';
+      var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
 
-    function togglePw() {
-      const input = document.getElementById('password');
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
+      var client = null;
 
-    async function handleLogin(e) {
-      if (e) e.preventDefault();
-
-      const errEl = document.getElementById('error');
-      errEl.classList.remove('show');
-      errEl.textContent = '';
-
-      if (!supabase) {
-        errEl.textContent = 'Supabase not loaded. Open this page via a local server or check internet.';
-        errEl.classList.add('show');
-        return false;
+      function showError(text) {
+        MSG.className = 'error';
+        MSG.textContent = text;
+      }
+      function showOk(text) {
+        MSG.className = 'ok';
+        MSG.textContent = text;
+      }
+      function clearMsg() {
+        MSG.className = '';
+        MSG.textContent = '';
+        MSG.style.display = 'none';
       }
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      if (!email || !password) {
-        errEl.textContent = 'Enter email and password.';
-        errEl.classList.add('show');
-        return false;
-      }
-
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) {
-          errEl.textContent = error.message;
-          errEl.classList.add('show');
-          btn.disabled = false;
-          btn.textContent = 'Log in';
+      function initClient() {
+        if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+          STATUS.textContent = 'Error: Supabase script did not load.';
+          showError('Cannot reach Supabase CDN. Check internet, or block on ad-blocker, then refresh.');
+          BTN.disabled = true;
           return false;
         }
-
-        // Success — go to dashboard
-        window.location.replace('dash.html');
-      } catch (err) {
-        errEl.textContent = err.message || 'Login failed.';
-        errEl.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'Log in';
+        try {
+          client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          STATUS.textContent = 'Ready';
+          return true;
+        } catch (e) {
+          STATUS.textContent = 'Error creating client';
+          showError(e.message || String(e));
+          BTN.disabled = true;
+          return false;
+        }
       }
-      return false;
-    }
 
-    // If already logged in, skip this page
-    if (supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) window.location.replace('dash.html');
+      function doLogin() {
+        clearMsg();
+        MSG.style.display = '';
+
+        if (!client) {
+          if (!initClient()) return;
+        }
+
+        var email = (EMAIL.value || '').trim();
+        var password = PASS.value || '';
+
+        if (!email || !password) {
+          showError('Enter both email and password.');
+          return;
+        }
+
+        BTN.disabled = true;
+        BTN.textContent = 'Signing in…';
+        STATUS.textContent = 'Signing in…';
+
+        client.auth.signInWithPassword({ email: email, password: password })
+          .then(function (result) {
+            if (result.error) {
+              showError(result.error.message);
+              BTN.disabled = false;
+              BTN.textContent = 'Log in';
+              STATUS.textContent = 'Ready';
+              return;
+            }
+            showOk('Success! Redirecting…');
+            STATUS.textContent = 'Logged in';
+            // small delay so user sees success
+            setTimeout(function () {
+              window.location.href = 'dash.html';
+            }, 400);
+          })
+          .catch(function (err) {
+            showError(err.message || 'Login failed');
+            BTN.disabled = false;
+            BTN.textContent = 'Log in';
+            STATUS.textContent = 'Ready';
+          });
+      }
+
+      // Wire button — type=button so no form submit ever happens
+      BTN.addEventListener('click', doLogin);
+
+      // Enter key on password field
+      PASS.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          doLogin();
+        }
       });
-    }
+      EMAIL.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          PASS.focus();
+        }
+      });
+
+      // Init after a tick so CDN script is parsed
+      function tryInit() {
+        if (typeof window.supabase !== 'undefined') {
+          initClient();
+          // already logged in?
+          if (client) {
+            client.auth.getSession().then(function (res) {
+              if (res.data && res.data.session) {
+                STATUS.textContent = 'Already logged in — redirecting…';
+                window.location.href = 'dash.html';
+              }
+            });
+          }
+        } else {
+          // wait a bit more for CDN
+          setTimeout(function () {
+            if (typeof window.supabase !== 'undefined') {
+              initClient();
+            } else {
+              STATUS.textContent = 'Supabase CDN not loaded';
+              showError('Script blocked or offline. Disable ad-blocker for this page and refresh.');
+            }
+          }, 800);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInit);
+      } else {
+        tryInit();
+      }
+    })();
   </script>
 </body>
 </html>
