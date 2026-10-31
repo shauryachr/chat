@@ -84,7 +84,6 @@
       font-size: 15px;
       background: #f9fafb;
       outline: none;
-      transition: border-color 0.15s, background 0.15s;
     }
     input:focus {
       border-color: #93c5fd;
@@ -116,7 +115,6 @@
       background: #1a56db;
       color: #fff;
       margin-top: 8px;
-      transition: opacity 0.15s;
     }
     .btn:hover { opacity: 0.92; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -127,7 +125,6 @@
       color: #6b7280;
     }
     .footer-link a { color: #111; font-weight: 500; }
-    .footer-link a:hover { text-decoration: underline; }
     .error-msg {
       display: none;
       background: #fef2f2;
@@ -154,21 +151,22 @@
     <div class="card">
       <div class="card-label">Welcome back</div>
       <h1>Log in</h1>
-      <p class="card-desc">Use the email you verified when you created your account.</p>
+      <p class="card-desc">Use the email you used when you created your account.</p>
 
       <div id="error" class="error-msg"></div>
 
-      <form id="login-form">
+      <!-- method=post + no name attrs = password never appears in URL even if JS fails -->
+      <form id="login-form" method="post" action="javascript:void(0)" onsubmit="return handleLogin(event)">
         <div class="field">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email" />
+          <input type="email" id="email" required autocomplete="email" />
         </div>
 
         <div class="field">
           <label for="password">Password</label>
           <div class="password-wrap">
-            <input type="password" id="password" name="password" required autocomplete="current-password" />
-            <button type="button" class="toggle-pw" onclick="togglePw('password', this)">👁</button>
+            <input type="password" id="password" required autocomplete="current-password" />
+            <button type="button" class="toggle-pw" onclick="togglePw()">👁</button>
           </div>
         </div>
 
@@ -184,42 +182,75 @@
   <script>
     const SUPABASE_URL = 'https://ktoyxbqybthleiiiiruv.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function togglePw(id, btn) {
-      const input = document.getElementById(id);
-      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-      else { input.type = 'password'; btn.textContent = '👁'; }
+    let supabase = null;
+    try {
+      if (!window.supabase) throw new Error('Supabase library failed to load. Check your internet connection.');
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (err) {
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').classList.add('show');
     }
 
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function togglePw() {
+      const input = document.getElementById('password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function handleLogin(e) {
+      if (e) e.preventDefault();
+
       const errEl = document.getElementById('error');
       errEl.classList.remove('show');
+      errEl.textContent = '';
+
+      if (!supabase) {
+        errEl.textContent = 'Supabase not loaded. Open this page via a local server or check internet.';
+        errEl.classList.add('show');
+        return false;
+      }
 
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        errEl.textContent = 'Enter email and password.';
+        errEl.classList.add('show');
+        return false;
+      }
 
       const btn = document.getElementById('submit-btn');
       btn.disabled = true;
       btn.textContent = 'Signing in…';
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        errEl.textContent = error.message;
+        if (error) {
+          errEl.textContent = error.message;
+          errEl.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Log in';
+          return false;
+        }
+
+        // Success — go to dashboard
+        window.location.replace('dash.html');
+      } catch (err) {
+        errEl.textContent = err.message || 'Login failed.';
         errEl.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'Log in';
-        return;
       }
+      return false;
+    }
 
-      window.location.href = 'dash.html';
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = 'dash.html';
-    });
+    // If already logged in, skip this page
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) window.location.replace('dash.html');
+      });
+    }
   </script>
 </body>
 </html>
