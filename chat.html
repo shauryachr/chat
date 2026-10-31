@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat · Connapp</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .back {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .back:hover { background: #e5e7eb; }
+    .peer-av {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .peer-av img { width: 100%; height: 100%; object-fit: cover; }
+    .peer-info { flex: 1; min-width: 0; }
+    .peer-name { font-weight: 600; font-size: 16px; }
+    .peer-uname { font-size: 13px; color: #6b7280; }
+    .header-actions a {
+      font-size: 14px;
+      color: #6b7280;
+      padding: 6px 10px;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .day-sep {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin: 12px 0 4px;
+    }
+    .msg {
+      max-width: 75%;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg.mine { align-self: flex-end; }
+    .msg.theirs { align-self: flex-start; }
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .msg.mine .bubble {
+      background: #1f2937;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.theirs .bubble {
+      background: #fff;
+      color: #1f2937;
+      border: 1px solid #e5e7eb;
+      border-bottom-left-radius: 4px;
+    }
+    .meta {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 3px;
+      padding: 0 4px;
+    }
+    .msg.mine .meta { text-align: right; }
+    .composer {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px 16px;
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .composer input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      font-size: 15px;
+      outline: none;
+      background: #f9fafb;
+    }
+    .composer input:focus {
+      border-color: #93c5fd;
+      background: #fff;
+    }
+    .composer button {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: #111;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .composer button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 15px;
+      text-align: center;
+      padding: 40px;
+    }
+    .error-banner {
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 13px;
+      padding: 10px 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="back" id="back-btn" title="Back">←</button>
+    <div class="peer-av" id="peer-av">👤</div>
+    <div class="peer-info">
+      <div class="peer-name" id="peer-name">…</div>
+      <div class="peer-uname" id="peer-uname"></div>
+    </div>
+    <div class="header-actions">
+      <a href="dash.html">Find people</a>
+    </div>
+  </header>
+
+  <div id="error-banner" class="error-banner" style="display:none;"></div>
+  <div class="messages" id="messages">
+    <div class="empty-state" id="empty">Loading conversation…</div>
+  </div>
+
+  <form class="composer" id="composer">
+    <input type="text" id="input" placeholder="Write a message" autocomplete="off" maxlength="4000" />
+    <button type="submit" id="send-btn" title="Send">↑</button>
+  </form>
+
+  <script>
+    const SUPABASE_URL = 'https://ktoyxbqybthleiiiiruv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(window.location.search);
+    const peerId = params.get('with');
+    const peerUsernameHint = params.get('u') || '';
+
+    let me = null;
+    let peer = null;
+    let channel = null;
+
+    function showError(msg) {
+      const el = document.getElementById('error-banner');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderMessage(m, isMine) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
+      div.dataset.id = m.id;
+      div.innerHTML = `
+        <div class="bubble">${escapeHtml(m.content)}</div>
+        <div class="meta">${formatTime(m.created_at)}</div>
+      `;
+      return div;
+    }
+
+    function appendMessage(m) {
+      const box = document.getElementById('messages');
+      const empty = document.getElementById('empty');
+      if (empty) empty.remove();
+
+      const isMine = m.sender_id === me.id;
+      // avoid duplicates
+      if (box.querySelector(`[data-id="${m.id}"]`)) return;
+      box.appendChild(renderMessage(m, isMine));
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function loadHistory() {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${me.id},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${me.id})`)
+        .order('created_at', { ascending: true })
+        .limit(200);
+
+      if (error) {
+        showError('Could not load messages: ' + error.message);
+        return;
+      }
+
+      const box = document.getElementById('messages');
+      box.innerHTML = '';
+      if (!data || data.length === 0) {
+        box.innerHTML = '<div class="empty-state" id="empty">No messages yet. Say hello.</div>';
+        return;
+      }
+      data.forEach(m => appendMessage(m));
+    }
+
+    async function sendMessage(content) {
+      const text = content.trim();
+      if (!text) return;
+
+      const btn = document.getElementById('send-btn');
+      btn.disabled = true;
+
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: me.id,
+          receiver_id: peerId,
+          content: text
+        })
+        .select()
+        .single();
+
+      btn.disabled = false;
+
+      if (error) {
+        showError('Send failed: ' + error.message);
+        return;
+      }
+      // Optimistic: realtime may also deliver it; appendMessage dedupes
+      appendMessage(data);
+      document.getElementById('input').value = '';
+      document.getElementById('input').focus();
+    }
+
+    function subscribeRealtime() {
+      channel = supabase
+        .channel(`dm:${[me.id, peerId].sort().join(':')}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `receiver_id=eq.${me.id}`
+          },
+          (payload) => {
+            const m = payload.new;
+            if (m.sender_id === peerId) appendMessage(m);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `sender_id=eq.${me.id}`
+          },
+          (payload) => {
+            const m = payload.new;
+            if (m.receiver_id === peerId) appendMessage(m);
+          }
+        )
+        .subscribe();
+    }
+
+    async function init() {
+      if (!peerId) {
+        window.location.href = 'dash.html';
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      me = session.user;
+
+      // Load peer profile
+      const { data: peerProfile, error: peerErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', peerId)
+        .single();
+
+      if (peerErr || !peerProfile) {
+        showError('User not found.');
+        document.getElementById('peer-name').textContent = peerUsernameHint || 'Unknown';
+      } else {
+        peer = peerProfile;
+        document.getElementById('peer-name').textContent = peer.full_name || peer.username;
+        document.getElementById('peer-uname').textContent = '@' + peer.username;
+        const av = document.getElementById('peer-av');
+        if (peer.avatar_url) {
+          av.innerHTML = `<img src="${peer.avatar_url}" alt="" />`;
+        }
+      }
+
+      document.title = (peer?.username || peerUsernameHint || 'Chat') + ' · Connapp';
+
+      await loadHistory();
+      subscribeRealtime();
+    }
+
+    document.getElementById('back-btn').addEventListener('click', () => {
+      window.location.href = 'dash.html';
+    });
+
+    document.getElementById('composer').addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage(document.getElementById('input').value);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (channel) supabase.removeChannel(channel);
+    });
+
+    init();
+  </script>
+</body>
+</html>
