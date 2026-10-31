@@ -6,103 +6,255 @@
   <title>Chat · Connapp</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f0f4f8;color:#1a1a1a;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
     a{text-decoration:none;color:inherit}
-    header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0}
-    .back{width:36px;height:36px;border-radius:50%;border:none;background:#f3f4f6;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    header{display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+    .back{width:40px;height:40px;border-radius:50%;border:none;background:#f3f4f6;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .peer-av{width:40px;height:40px;border-radius:50%;background:#e5e7eb;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
     .peer-av img{width:100%;height:100%;object-fit:cover}
     .peer-info{flex:1;min-width:0}
     .peer-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .peer-uname{font-size:12px;color:#6b7280}
-    .header-actions a{font-size:13px;color:#6b7280;padding:6px}
-    .messages{flex:1;overflow-y:auto;padding:16px 12px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px}
-    .msg{max-width:80%;display:flex;flex-direction:column}
+    .menu-btn{width:40px;height:40px;border:none;background:transparent;font-size:20px;cursor:pointer;color:#374151;border-radius:50%}
+    .menu-btn:active{background:#f3f4f6}
+    .menu{position:absolute;right:12px;top:56px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);border:1px solid #e5e7eb;min-width:180px;z-index:50;display:none;overflow:hidden}
+    .menu.open{display:block}
+    .menu button{display:block;width:100%;text-align:left;padding:12px 16px;border:none;background:none;font-size:14px;cursor:pointer;font-family:inherit;color:#111}
+    .menu button:active{background:#f3f4f6}
+    .menu button.danger{color:#dc2626}
+    .messages{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px}
+    .msg{max-width:min(80%,320px);display:flex;flex-direction:column;position:relative}
     .msg.mine{align-self:flex-end}
     .msg.theirs{align-self:flex-start}
     .bubble{padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.4;word-break:break-word}
     .msg.mine .bubble{background:#1f2937;color:#fff;border-bottom-right-radius:4px}
     .msg.theirs .bubble{background:#fff;color:#1f2937;border:1px solid #e5e7eb;border-bottom-left-radius:4px}
-    .meta{font-size:11px;color:#9ca3af;margin-top:3px;padding:0 4px}
-    .msg.mine .meta{text-align:right}
-    .composer{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e5e7eb;flex-shrink:0}
+    .msg.deleted .bubble{opacity:.55;font-style:italic}
+    .meta{font-size:11px;color:#9ca3af;margin-top:2px;padding:0 4px;display:flex;gap:6px;align-items:center}
+    .msg.mine .meta{justify-content:flex-end}
+    .msg-actions{display:none;gap:4px;margin-top:2px}
+    .msg.mine:hover .msg-actions,.msg.mine.show-actions .msg-actions{display:flex;justify-content:flex-end}
+    .msg-actions button{font-size:11px;border:none;background:#e5e7eb;color:#374151;padding:4px 8px;border-radius:999px;cursor:pointer}
+    .composer{display:flex;gap:8px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e5e7eb;flex-shrink:0;align-items:center}
     .composer input{flex:1;padding:12px 14px;border:1px solid #e5e7eb;border-radius:999px;font-size:16px;outline:none;background:#f9fafb;min-width:0}
     .composer input:focus{border-color:#93c5fd;background:#fff}
     .composer button{width:44px;height:44px;border-radius:50%;border:none;background:#111;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
     .composer button:disabled{opacity:.4}
-    .empty-state{flex:1;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;padding:32px}
+    .empty-state{margin:auto;color:#9ca3af;font-size:14px;text-align:center;padding:32px}
     .error-banner{background:#fef2f2;color:#b91c1c;font-size:12px;padding:8px 12px;text-align:center}
+    .blocked-banner{background:#fef3c7;color:#92400e;font-size:13px;padding:10px 12px;text-align:center}
+    .edit-bar{display:none;background:#eff6ff;padding:8px 12px;font-size:13px;color:#1e40af;border-bottom:1px solid #bfdbfe;align-items:center;justify-content:space-between;gap:8px}
+    .edit-bar.open{display:flex}
+    .edit-bar button{border:none;background:none;color:#1e40af;font-size:13px;cursor:pointer}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:none}
+    .overlay.open{display:block}
   </style>
 </head>
 <body>
   <header>
-    <button type="button" class="back" id="backBtn" title="Back">←</button>
+    <button type="button" class="back" id="backBtn">←</button>
     <div class="peer-av" id="peer-av">👤</div>
     <div class="peer-info">
       <div class="peer-name" id="peer-name">…</div>
       <div class="peer-uname" id="peer-uname"></div>
     </div>
-    <div class="header-actions"><a href="dash.html">People</a></div>
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu">⋮</button>
+    <div class="menu" id="menu">
+      <button type="button" id="hideChatBtn">Hide chat</button>
+      <button type="button" id="blockBtn" class="danger">Block user</button>
+      <button type="button" id="unblockBtn" style="display:none">Unblock user</button>
+    </div>
   </header>
+  <div class="overlay" id="overlay"></div>
   <div id="error-banner" class="error-banner" style="display:none"></div>
+  <div id="blocked-banner" class="blocked-banner" style="display:none">You blocked this user. Unblock to send messages.</div>
+  <div class="edit-bar" id="editBar">
+    <span id="editLabel">Editing message</span>
+    <button type="button" id="cancelEdit">Cancel</button>
+  </div>
   <div class="messages" id="messages"><div class="empty-state" id="empty">Loading…</div></div>
   <div class="composer">
     <input type="text" id="input" placeholder="Write a message" autocomplete="off" maxlength="4000">
-    <button type="button" id="sendBtn" title="Send">↑</button>
+    <button type="button" id="sendBtn">↑</button>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   (function(){
     var URL='https://ktoyxbqybthleiiiiruv.supabase.co';
     var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
-    var params=new URLSearchParams(window.location.search);
+    var params=new URLSearchParams(location.search);
     var peerId=params.get('with'), peerHint=params.get('u')||'';
-    var client=null,me=null,channel=null;
+    var client=null,me=null,channel=null,editingId=null,isBlocked=false;
+    var FIVE_MIN=5*60*1000;
+
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
     function showError(t){var el=document.getElementById('error-banner');el.textContent=t;el.style.display='block'}
     function fmt(iso){return new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+    function canEdit(m){return m.sender_id===me.id && !m.deleted_at && (Date.now()-new Date(m.created_at).getTime())<FIVE_MIN}
+
+    function renderMsg(m){
+      var isMine=m.sender_id===me.id;
+      var deleted=!!m.deleted_at;
+      var div=document.createElement('div');
+      div.className='msg '+(isMine?'mine':'theirs')+(deleted?' deleted':'');
+      div.dataset.id=m.id;
+      var content=deleted?'Message deleted':esc(m.content);
+      var edited=m.edited_at&&!deleted?' · edited':'';
+      var actions='';
+      if(isMine&&!deleted){
+        actions='<div class="msg-actions">';
+        if(canEdit(m)) actions+='<button type="button" data-act="edit">Edit</button>';
+        actions+='<button type="button" data-act="del">Delete</button></div>';
+      }
+      div.innerHTML='<div class="bubble">'+content+'</div><div class="meta"><span>'+fmt(m.created_at)+edited+'</span></div>'+actions;
+      if(isMine&&!deleted){
+        div.addEventListener('click',function(e){
+          if(e.target.dataset.act==='edit'){ startEdit(m); return; }
+          if(e.target.dataset.act==='del'){ deleteMsg(m.id); return; }
+          div.classList.toggle('show-actions');
+        });
+      }
+      return div;
+    }
+
     function append(m){
       var box=document.getElementById('messages');
       var empty=document.getElementById('empty');if(empty)empty.remove();
-      if(box.querySelector('[data-id="'+m.id+'"]'))return;
-      var isMine=m.sender_id===me.id;
-      var div=document.createElement('div');
-      div.className='msg '+(isMine?'mine':'theirs');div.dataset.id=m.id;
-      div.innerHTML='<div class="bubble">'+esc(m.content)+'</div><div class="meta">'+fmt(m.created_at)+'</div>';
-      box.appendChild(div);box.scrollTop=box.scrollHeight;
+      var existing=box.querySelector('[data-id="'+m.id+'"]');
+      if(existing){ existing.replaceWith(renderMsg(m)); return; }
+      box.appendChild(renderMsg(m));
+      box.scrollTop=box.scrollHeight;
     }
+
     function loadHistory(){
       return client.from('messages').select('*')
         .or('and(sender_id.eq.'+me.id+',receiver_id.eq.'+peerId+'),and(sender_id.eq.'+peerId+',receiver_id.eq.'+me.id+')')
-        .order('created_at',{ascending:true}).limit(200).then(function(r){
-          if(r.error){showError('Could not load messages: '+r.error.message);return}
+        .order('created_at',{ascending:true}).limit(300)
+        .then(function(r){
+          if(r.error){showError(r.error.message);return}
           var box=document.getElementById('messages');box.innerHTML='';
           if(!r.data||!r.data.length){box.innerHTML='<div class="empty-state" id="empty">No messages yet. Say hello.</div>';return}
           r.data.forEach(append);
         });
     }
-    function send(){
-      var text=(document.getElementById('input').value||'').trim();
-      if(!text||!client||!me)return;
-      var btn=document.getElementById('sendBtn');btn.disabled=true;
-      client.from('messages').insert({sender_id:me.id,receiver_id:peerId,content:text}).select().single().then(function(r){
-        btn.disabled=false;
-        if(r.error){showError('Send failed: '+r.error.message);return}
-        append(r.data);document.getElementById('input').value='';document.getElementById('input').focus();
-      }).catch(function(e){btn.disabled=false;showError(e.message||'Send failed')});
+
+    function startEdit(m){
+      if(!canEdit(m)){showError('You can only edit within 5 minutes.');return}
+      editingId=m.id;
+      document.getElementById('input').value=m.content;
+      document.getElementById('input').focus();
+      document.getElementById('editBar').classList.add('open');
+      document.getElementById('sendBtn').textContent='✓';
     }
+    function cancelEdit(){
+      editingId=null;
+      document.getElementById('input').value='';
+      document.getElementById('editBar').classList.remove('open');
+      document.getElementById('sendBtn').textContent='↑';
+    }
+    document.getElementById('cancelEdit').addEventListener('click',cancelEdit);
+
+    function deleteMsg(id){
+      if(!confirm('Delete this message?'))return;
+      client.from('messages').update({deleted_at:new Date().toISOString(),content:' '}).eq('id',id).eq('sender_id',me.id)
+        .then(function(r){
+          if(r.error){showError(r.error.message);return}
+          var el=document.querySelector('[data-id="'+id+'"]');
+          if(el) append({id:id,sender_id:me.id,receiver_id:peerId,content:' ',deleted_at:new Date().toISOString(),created_at:new Date().toISOString()});
+          loadHistory();
+        });
+    }
+
+    function send(){
+      if(isBlocked){showError('Unblock this user to send messages.');return}
+      var text=(document.getElementById('input').value||'').trim();
+      if(!text)return;
+      var btn=document.getElementById('sendBtn');btn.disabled=true;
+
+      if(editingId){
+        client.from('messages').update({content:text,edited_at:new Date().toISOString()}).eq('id',editingId).eq('sender_id',me.id)
+          .select().single().then(function(r){
+            btn.disabled=false;
+            if(r.error){showError(r.error.message);return}
+            cancelEdit();
+            if(r.data)append(r.data); else loadHistory();
+          });
+        return;
+      }
+
+      client.from('messages').insert({sender_id:me.id,receiver_id:peerId,content:text}).select().single()
+        .then(function(r){
+          btn.disabled=false;
+          if(r.error){showError(r.error.message);return}
+          append(r.data);
+          document.getElementById('input').value='';
+          document.getElementById('input').focus();
+        }).catch(function(e){btn.disabled=false;showError(e.message)});
+    }
+
     function subscribe(){
       channel=client.channel('dm:'+[me.id,peerId].sort().join(':'))
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'receiver_id=eq.'+me.id},function(p){if(p.new.sender_id===peerId)append(p.new)})
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'sender_id=eq.'+me.id},function(p){if(p.new.receiver_id===peerId)append(p.new)})
-        .subscribe(function(status){console.log('Realtime:',status)});
+        .on('postgres_changes',{event:'*',schema:'public',table:'messages'},function(p){
+          var m=p.new||p.old;
+          if(!m)return;
+          var involved=(m.sender_id===me.id&&m.receiver_id===peerId)||(m.sender_id===peerId&&m.receiver_id===me.id);
+          if(involved){ if(p.eventType==='DELETE') loadHistory(); else append(m); }
+        }).subscribe();
     }
+
+    function checkBlock(){
+      return client.from('blocks').select('*').eq('blocker_id',me.id).eq('blocked_id',peerId).maybeSingle()
+        .then(function(r){
+          isBlocked=!!(r.data);
+          document.getElementById('blocked-banner').style.display=isBlocked?'block':'none';
+          document.getElementById('blockBtn').style.display=isBlocked?'none':'block';
+          document.getElementById('unblockBtn').style.display=isBlocked?'block':'none';
+          document.getElementById('sendBtn').disabled=isBlocked;
+        });
+    }
+
+    function hideChat(){
+      closeMenu();
+      client.from('hidden_chats').upsert({user_id:me.id,peer_id:peerId}).then(function(r){
+        if(r.error){showError(r.error.message);return}
+        alert('Chat hidden. On Dashboard, triple-tap the Connapp logo to open hidden chats.');
+        location.href='dash.html';
+      });
+    }
+
+    function blockUser(){
+      closeMenu();
+      if(!confirm('Block this user? You will not be able to message them until you unblock.'))return;
+      client.from('blocks').upsert({blocker_id:me.id,blocked_id:peerId}).then(function(r){
+        if(r.error){showError(r.error.message);return}
+        isBlocked=true;checkBlock();
+      });
+    }
+    function unblockUser(){
+      closeMenu();
+      client.from('blocks').delete().eq('blocker_id',me.id).eq('blocked_id',peerId).then(function(r){
+        if(r.error){showError(r.error.message);return}
+        isBlocked=false;checkBlock();
+      });
+    }
+
+    var menu=document.getElementById('menu'), overlay=document.getElementById('overlay');
+    function closeMenu(){menu.classList.remove('open');overlay.classList.remove('open')}
+    document.getElementById('menuBtn').addEventListener('click',function(){
+      menu.classList.toggle('open');overlay.classList.toggle('open');
+    });
+    overlay.addEventListener('click',closeMenu);
+    document.getElementById('hideChatBtn').addEventListener('click',hideChat);
+    document.getElementById('blockBtn').addEventListener('click',blockUser);
+    document.getElementById('unblockBtn').addEventListener('click',unblockUser);
+
     function boot(){
-      if(!peerId){window.location.href='dash.html';return}
-      if(typeof window.supabase==='undefined'){showError('Supabase CDN failed to load.');return}
+      if(!peerId){location.href='dash.html';return}
+      if(typeof window.supabase==='undefined'){showError('Supabase CDN failed.');return}
       client=window.supabase.createClient(URL,KEY);
       client.auth.getSession().then(function(r){
-        if(!r.data||!r.data.session){window.location.href='login.html';return}
+        if(!r.data||!r.data.session){location.href='login.html';return}
         me=r.data.session.user;
         client.from('profiles').select('*').eq('id',peerId).single().then(function(pr){
           var p=pr.data;
@@ -111,17 +263,14 @@
             document.getElementById('peer-uname').textContent='@'+p.username;
             if(p.avatar_url)document.getElementById('peer-av').innerHTML='<img src="'+esc(p.avatar_url)+'" alt="">';
             document.title=(p.username||'Chat')+' · Connapp';
-          } else {
-            document.getElementById('peer-name').textContent=peerHint||'Unknown';
-          }
+          } else document.getElementById('peer-name').textContent=peerHint||'Unknown';
         });
-        loadHistory().then(subscribe);
+        checkBlock().then(function(){return loadHistory()}).then(subscribe);
       });
     }
-    document.getElementById('backBtn').addEventListener('click',function(){window.location.href='dash.html'});
+    document.getElementById('backBtn').addEventListener('click',function(){location.href='dash.html'});
     document.getElementById('sendBtn').addEventListener('click',send);
     document.getElementById('input').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();send()}});
-    window.addEventListener('beforeunload',function(){if(channel&&client)client.removeChannel(channel)});
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   })();
   </script>

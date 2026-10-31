@@ -18,7 +18,11 @@ Connapp is a minimal messaging app built around private rooms — no feeds, no s
 | **Quiet presence** | See who’s in the room. No last-seen clocks or green-dot theater. |
 | **Nothing public** | What is said stays in the room. No feed, no follower count, no profile to perform. |
 | **Realtime chat** | 1:1 messages update live via Supabase Realtime. |
+| **Edit / delete** | Edit your message within 5 minutes; delete anytime. |
+| **Block user** | Block (and unblock) from the chat menu. |
+| **Hide chat** | Hide a conversation; triple-tap the Connapp logo on Dashboard to open the secret vault. |
 | **Accounts** | Sign up, log in, edit name, username, bio, photo, password. |
+| **Mobile** | Responsive layout with safe-area padding. |
 
 ---
 
@@ -51,6 +55,8 @@ SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
 ```
 
 You should see a row for `messages`.
+
+Re-run the full `supabase.sql` if you already set up earlier — it adds `edited_at`, `deleted_at`, `blocks`, and `hidden_chats`.
 
 4. (Optional for local testing) **Authentication → Providers → Email** → turn **off** “Confirm email” so signup logs you in immediately.
 
