@@ -53,6 +53,7 @@
     </div>
     <div class="header-actions">
       <div class="me-chip"><span class="av" id="me-av">👤</span><span id="me-name">…</span></div>
+      <a href="post.html">Post</a>
       <a href="account.html">Account</a>
       <button type="button" id="logoutBtn">Log out</button>
     </div>
@@ -66,7 +67,7 @@
     </div>
     <div id="status" class="loading" style="display:none">Searching…</div>
     <div id="results" class="results"></div>
-    <p class="hint">Tap a person to chat.<br>Triple-tap the <strong>Connapp</strong> logo to open hidden chats.</p>
+    <p class="hint">Tap a person to open their profile.<br>Triple-tap the <strong>Connapp</strong> logo to open hidden chats.</p>
   </main>
 
   <div class="modal-bg" id="vaultModal">
@@ -111,11 +112,11 @@
           return '<div class="user-card" data-id="'+u.id+'" data-username="'+esc(u.username)+'">'+
             '<div class="av">'+(u.avatar_url?'<img src="'+esc(u.avatar_url)+'" alt="">':'👤')+'</div>'+
             '<div class="info"><div class="name">'+esc(u.full_name||u.username)+badge+'</div><div class="uname">@'+esc(u.username)+'</div>'+
-            (u.bio?'<div class="bio">'+esc(u.bio)+'</div>':'')+'</div><div class="go">Chat →</div></div>';
+            (u.bio?'<div class="bio">'+esc(u.bio)+'</div>':'')+'</div><div class="go">Profile →</div></div>';
         }).join('');
         results.querySelectorAll('.user-card').forEach(function(card){
           card.addEventListener('click',function(){
-            location.href='chat.html?with='+encodeURIComponent(card.dataset.id)+'&u='+encodeURIComponent(card.dataset.username);
+            location.href='acc.html?id='+encodeURIComponent(card.dataset.id);
           });
         });
       });

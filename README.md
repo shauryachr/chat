@@ -23,6 +23,7 @@ Connapp is a minimal messaging app built around private rooms — no feeds, no s
 | **Hide chat** | Hide a conversation; triple-tap the Connapp logo on Dashboard to open the secret vault. |
 | **Accounts** | Sign up, log in, edit name, username, bio, photo, password. |
 | **Mobile** | Responsive layout with safe-area padding. |
+| **Posts** | Upload photos on `post.html`; view on `acc.html`. Clicking someone opens their profile, not chat. Message from their profile. |
 
 ---
 
@@ -35,7 +36,9 @@ Connapp is a minimal messaging app built around private rooms — no feeds, no s
 | `login.html` | Log in |
 | `dash.html` | Search people → open chat |
 | `chat.html` | 1:1 realtime messaging |
-| `account.html` | Profile & password settings |
+| `account.html` | Edit your settings |
+| `acc.html` | Public profile + posts grid |
+| `post.html` | Upload a photo post |
 | `supabase.sql` | Database schema + RLS + Realtime |
 | `banner.jpeg` | Brand banner |
 

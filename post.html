@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>New post · Connapp</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#e8f0fe,#f0f4f8 50%,#fff);color:#1a1a1a;min-height:100dvh;display:flex;flex-direction:column}
+    a{text-decoration:none;color:inherit}
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;padding-top:max(12px,env(safe-area-inset-top));border-bottom:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.95)}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}
+    .logo-icon{width:28px;height:28px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+    .header-actions{display:flex;gap:12px;align-items:center;font-size:13px;color:#4b5563}
+    .header-actions button{background:none;border:none;font-size:13px;color:#4b5563;cursor:pointer;font-family:inherit}
+    main{flex:1;display:flex;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+    .card{background:#fff;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.08);width:100%;max-width:420px;padding:24px 18px}
+    h1{font-size:22px;font-weight:700;margin-bottom:6px}
+    .desc{font-size:13px;color:#6b7280;margin-bottom:18px}
+    .preview{width:100%;aspect-ratio:1;background:#f3f4f6;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:1px dashed #d1d5db}
+    .preview img{width:100%;height:100%;object-fit:cover}
+    .preview span{color:#9ca3af;font-size:14px;text-align:center;padding:16px}
+    label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:#374151}
+    .field{margin-bottom:14px}
+    input[type=text],textarea{width:100%;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;font-size:16px;background:#f9fafb;outline:none;font-family:inherit}
+    textarea{min-height:72px;resize:none}
+    input:focus,textarea:focus{border-color:#93c5fd;background:#fff}
+    #file{display:none}
+    .pick{display:inline-flex;padding:10px 16px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:14px}
+    .btn{display:block;width:100%;padding:14px;border-radius:999px;font-size:15px;font-weight:600;border:none;cursor:pointer;background:#1a56db;color:#fff;margin-top:8px}
+    .btn:disabled{opacity:.55;cursor:wait}
+    .btn-secondary{background:#f3f4f6;color:#374151}
+    #msg{display:none;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:12px}
+    #msg.error{display:block;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    #msg.ok{display:block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+    .hint{font-size:12px;color:#9ca3af;margin-top:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dash.html" class="logo"><span class="logo-icon">▣</span>Connapp</a>
+    <div class="header-actions">
+      <a href="dash.html">Dashboard</a>
+      <a href="account.html">Account</a>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <h1>New post</h1>
+      <p class="desc">Share a photo. It will appear on your profile.</p>
+      <div id="msg"></div>
+      <div class="preview" id="preview"><span>Choose a photo</span></div>
+      <label class="pick" for="file">Choose photo</label>
+      <input type="file" id="file" accept="image/*">
+      <div class="field">
+        <label for="caption">Caption (optional)</label>
+        <textarea id="caption" placeholder="Say something…" maxlength="500"></textarea>
+      </div>
+      <p class="hint">Max ~800KB image (stored for this demo).</p>
+      <button type="button" class="btn" id="postBtn">Post</button>
+      <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (function(){
+    var URL='https://ktoyxbqybthleiiiiruv.supabase.co';
+    var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
+    var client=null,me=null,imageData=null;
+    var MSG=document.getElementById('msg');
+    function showError(t){MSG.className='error';MSG.textContent=t}
+    function showOk(t){MSG.className='ok';MSG.textContent=t}
+    function clearMsg(){MSG.className='';MSG.textContent=''}
+
+    document.getElementById('file').addEventListener('change',function(e){
+      var f=e.target.files[0];if(!f)return;
+      if(f.size>800000){showError('Image must be under 800KB.');return}
+      var r=new FileReader();
+      r.onload=function(ev){
+        imageData=ev.target.result;
+        document.getElementById('preview').innerHTML='<img src="'+imageData+'" alt="preview">';
+        clearMsg();
+      };
+      r.readAsDataURL(f);
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click',function(){
+      location.href='dash.html';
+    });
+
+    document.getElementById('postBtn').addEventListener('click',function(){
+      clearMsg();
+      if(!client||!me){showError('Not logged in.');return}
+      if(!imageData){showError('Choose a photo first.');return}
+      var caption=(document.getElementById('caption').value||'').trim();
+      var btn=document.getElementById('postBtn');
+      btn.disabled=true;btn.textContent='Posting…';
+      client.from('posts').insert({user_id:me.id,image_url:imageData,caption:caption}).select().single()
+        .then(function(r){
+          btn.disabled=false;btn.textContent='Post';
+          if(r.error){showError(r.error.message);return}
+          showOk('Posted!');
+          setTimeout(function(){location.href='acc.html?id='+encodeURIComponent(me.id)},500);
+        }).catch(function(e){btn.disabled=false;btn.textContent='Post';showError(e.message)});
+    });
+
+    function boot(){
+      if(typeof window.supabase==='undefined'){showError('CDN failed to load.');return}
+      client=window.supabase.createClient(URL,KEY);
+      client.auth.getSession().then(function(r){
+        if(!r.data||!r.data.session){location.href='login.html';return}
+        me=r.data.session.user;
+      });
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  })();
+  </script>
+</body>
+</html>
