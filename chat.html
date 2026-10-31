@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/svj" href="connapp.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chat · Connapp</title>
@@ -164,6 +163,7 @@
     </div>
     <div class="header-actions">
       <a href="dash.html">Find people</a>
+      <a href="account.html">Account</a>
     </div>
   </header>
 
@@ -314,7 +314,16 @@
             if (m.receiver_id === peerId) appendMessage(m);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+        console.log('Realtime status:', status);
+        if (status === 'SUBSCRIBED') {
+          const banner = document.getElementById('error-banner');
+          if (banner && banner.textContent.includes('Could not')) banner.style.display = 'none';
+        }
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          showError('Realtime connection issue: ' + status + '. Messages still save; refresh to see new ones.');
+        }
+      });
     }
 
     async function init() {
