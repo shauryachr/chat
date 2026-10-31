@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Account · Connapp</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#e8f0fe 0%,#f0f4f8 50%,#fff 100%);color:#1a1a1a;min-height:100vh;display:flex;flex-direction:column}
+    a{text-decoration:none;color:inherit}
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}
+    .logo-icon{width:26px;height:26px;background:#111;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+    .header-actions{display:flex;gap:12px;align-items:center}
+    .header-actions a,.header-actions button{font-size:13px;color:#4b5563;background:none;border:none;cursor:pointer;font-family:inherit}
+    main{flex:1;display:flex;justify-content:center;padding:16px 16px 48px}
+    .card{background:#fff;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.08);width:100%;max-width:480px;padding:28px 20px}
+    .card-label{font-size:12px;color:#9ca3af;margin-bottom:6px}
+    .card h1{font-size:24px;font-weight:700;margin-bottom:4px}
+    .card-desc{font-size:14px;color:#6b7280;margin-bottom:20px}
+    .avatar-section{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f3f4f6}
+    .avatar-preview{width:72px;height:72px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:2px solid #f3f4f6}
+    .avatar-preview img{width:100%;height:100%;object-fit:cover}
+    .avatar-actions{display:flex;flex-direction:column;gap:6px}
+    .btn-outline{display:inline-flex;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid #e5e7eb;background:#fff;color:#374151;cursor:pointer}
+    .btn-text{background:none;border:none;color:#6b7280;font-size:12px;cursor:pointer;text-align:left;padding:2px 0}
+    #dp-input{display:none}
+    label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:5px}
+    .field{margin-bottom:14px}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:420px){.field-row{grid-template-columns:1fr}}
+    input,select,textarea{width:100%;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:16px;background:#f9fafb;outline:none;font-family:inherit;-webkit-appearance:none}
+    input:focus,select:focus,textarea:focus{border-color:#93c5fd;background:#fff}
+    textarea{min-height:80px;resize:vertical;line-height:1.4}
+    .hint{font-size:12px;color:#9ca3af;margin-top:5px}
+    .section-title{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin:22px 0 12px;padding-top:8px;border-top:1px solid #f3f4f6}
+    .btn{display:block;width:100%;padding:14px;border-radius:999px;font-size:15px;font-weight:600;border:none;cursor:pointer;background:#1a56db;color:#fff;margin-top:10px}
+    .btn:disabled{opacity:.6;cursor:wait}
+    .btn-secondary{background:#f3f4f6;color:#374151}
+    .footer-link{text-align:center;margin-top:18px;font-size:14px;color:#6b7280}
+    .footer-link a{color:#111;font-weight:500}
+    #msg{display:none;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:14px}
+    #msg.error{display:block;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    #msg.ok{display:block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo"><span class="logo-icon">▣</span>Connapp</a>
+    <div class="header-actions">
+      <a href="dash.html">Dashboard</a>
+      <button type="button" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+  <main>
+    <div class="card">
+      <div class="card-label">Your account</div>
+      <h1>Account settings</h1>
+      <p class="card-desc">Update your profile, password, and personal details.</p>
+      <div id="msg"></div>
+      <div class="avatar-section">
+        <div class="avatar-preview" id="avatar-preview"><span>👤</span></div>
+        <div class="avatar-actions">
+          <label class="btn-outline" for="dp-input">Change photo</label>
+          <input type="file" id="dp-input" accept="image/*">
+          <button type="button" class="btn-text" id="removeDp">Remove photo</button>
+          <div class="hint">Under 500KB for this demo.</div>
+        </div>
+      </div>
+      <div class="section-title">Profile</div>
+      <div class="field"><label for="name">Name</label><input type="text" id="name" autocomplete="name"></div>
+      <div class="field"><label for="username">Username</label><input type="text" id="username" autocomplete="username"><div class="hint">Letters, numbers, underscore only.</div></div>
+      <div class="field"><label for="bio">Bio</label><textarea id="bio" placeholder="A short line about you (optional)"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="gender">Gender</label>
+          <select id="gender"><option value="">Prefer not to say</option><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option><option value="other">Other</option></select>
+        </div>
+        <div class="field"><label for="dob">Date of birth</label><input type="date" id="dob"></div>
+      </div>
+      <div class="section-title">Account</div>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" disabled><div class="hint">Email cannot be changed here.</div></div>
+      <div class="section-title">Password</div>
+      <div class="field"><label for="new-password">New password</label><input type="password" id="new-password" autocomplete="new-password"><div class="hint">Leave blank to keep current. Min 8 characters.</div></div>
+      <button type="button" class="btn" id="saveBtn">Save changes</button>
+      <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+      <div class="footer-link"><a href="dash.html">← Back to dashboard</a></div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (function(){
+    var URL='https://ktoyxbqybthleiiiiruv.supabase.co';
+    var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
+    var client=null,me=null,avatarDataUrl=null;
+    var MSG=document.getElementById('msg');
+    function showError(t){MSG.className='error';MSG.textContent=t}
+    function showOk(t){MSG.className='ok';MSG.textContent=t}
+    function clearMsg(){MSG.className='';MSG.textContent=''}
+    function setAvatar(url){
+      var p=document.getElementById('avatar-preview');
+      if(url){p.innerHTML='<img src="'+url+'" alt="">';avatarDataUrl=url}
+      else{p.innerHTML='<span>👤</span>';avatarDataUrl=null}
+    }
+    document.getElementById('dp-input').addEventListener('change',function(e){
+      var f=e.target.files[0];if(!f)return;
+      if(f.size>500000){showError('Image must be under 500KB.');return}
+      var r=new FileReader();r.onload=function(ev){setAvatar(ev.target.result)};r.readAsDataURL(f);
+    });
+    document.getElementById('removeDp').addEventListener('click',function(){document.getElementById('dp-input').value='';setAvatar(null)});
+    document.getElementById('cancelBtn').addEventListener('click',function(){window.location.href='dash.html'});
+    document.getElementById('logoutBtn').addEventListener('click',function(){
+      if(client)client.auth.signOut().then(function(){window.location.href='login.html'});
+      else window.location.href='login.html';
+    });
+    document.getElementById('saveBtn').addEventListener('click',function(){
+      clearMsg();
+      if(!client||!me){showError('Not logged in.');return}
+      var full_name=(document.getElementById('name').value||'').trim();
+      var username=(document.getElementById('username').value||'').trim().toLowerCase();
+      var bio=(document.getElementById('bio').value||'').trim();
+      var gender=document.getElementById('gender').value||null;
+      var dob=document.getElementById('dob').value||null;
+      var newPw=document.getElementById('new-password').value;
+      if(!/^[a-z0-9_]{3,30}$/.test(username)){showError('Username: 3–30 chars, lowercase letters, numbers, underscore.');return}
+      var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Saving…';
+      client.from('profiles').update({full_name:full_name,username:username,bio:bio,gender:gender,dob:dob,avatar_url:avatarDataUrl}).eq('id',me.id).then(function(r){
+        if(r.error){showError(r.error.message);btn.disabled=false;btn.textContent='Save changes';return}
+        if(newPw){
+          if(newPw.length<8){showError('Password min 8 characters.');btn.disabled=false;btn.textContent='Save changes';return}
+          return client.auth.updateUser({password:newPw}).then(function(pr){
+            if(pr.error){showError(pr.error.message);btn.disabled=false;btn.textContent='Save changes';return}
+            showOk('Saved.');btn.disabled=false;btn.textContent='Save changes';document.getElementById('new-password').value='';
+          });
+        }
+        showOk('Saved.');btn.disabled=false;btn.textContent='Save changes';
+      }).catch(function(e){showError(e.message);btn.disabled=false;btn.textContent='Save changes'});
+    });
+    function boot(){
+      if(typeof window.supabase==='undefined'){showError('Supabase CDN failed to load.');return}
+      client=window.supabase.createClient(URL,KEY);
+      client.auth.getSession().then(function(r){
+        if(!r.data||!r.data.session){window.location.href='login.html';return}
+        me=r.data.session.user;
+        document.getElementById('email').value=me.email||'';
+        client.from('profiles').select('*').eq('id',me.id).single().then(function(pr){
+          if(pr.error){showError(pr.error.message);return}
+          var p=pr.data;
+          document.getElementById('name').value=p.full_name||'';
+          document.getElementById('username').value=p.username||'';
+          document.getElementById('bio').value=p.bio||'';
+          document.getElementById('gender').value=p.gender||'';
+          document.getElementById('dob').value=p.dob||'';
+          if(p.avatar_url)setAvatar(p.avatar_url);
+        });
+      });
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  })();
+  </script>
+</body>
+</html>

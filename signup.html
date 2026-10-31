@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Join Connapp</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#e8f0fe 0%,#f0f4f8 50%,#fff 100%);color:#1a1a1a;min-height:100vh;display:flex;flex-direction:column}
+    a{text-decoration:none;color:inherit}
+    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+    .logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px}
+    .logo-icon{width:28px;height:28px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+    .home-link{font-size:14px;color:#4b5563}
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:16px}
+    .card{background:#fff;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.08);width:100%;max-width:400px;padding:28px 22px}
+    .card-label{font-size:12px;color:#9ca3af;margin-bottom:6px}
+    .card h1{font-size:26px;font-weight:700;margin-bottom:6px}
+    .card-desc{font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.45}
+    label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:5px}
+    .field{margin-bottom:14px}
+    input{width:100%;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:16px;background:#f9fafb;outline:none;-webkit-appearance:none}
+    input:focus{border-color:#93c5fd;background:#fff}
+    .hint{font-size:12px;color:#9ca3af;margin-top:5px}
+    .btn{display:block;width:100%;padding:14px;border-radius:999px;font-size:15px;font-weight:600;border:none;cursor:pointer;background:#1a56db;color:#fff;margin-top:6px}
+    .btn:disabled{opacity:.6;cursor:wait}
+    .footer-link{text-align:center;margin-top:18px;font-size:14px;color:#6b7280}
+    .footer-link a{color:#111;font-weight:500}
+    #msg{display:none;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:14px}
+    #msg.error{display:block;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    #msg.ok{display:block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+    #status{font-size:12px;color:#9ca3af;margin-bottom:10px;min-height:16px}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo"><span class="logo-icon">▣</span>Connapp</a>
+    <a href="index.html" class="home-link">Home</a>
+  </header>
+  <main>
+    <div class="card">
+      <div class="card-label">Create an account</div>
+      <h1>Join Connapp</h1>
+      <p class="card-desc">Create an account to start messaging in private rooms.</p>
+      <div id="status">Loading…</div>
+      <div id="msg"></div>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" autocomplete="new-password" placeholder="At least 8 characters"><div class="hint">At least 8 characters.</div></div>
+      <div class="field"><label for="birthday">Birthday</label><input type="date" id="birthday"></div>
+      <div class="field"><label for="name">Name</label><input type="text" id="name" autocomplete="name" placeholder="Your name"></div>
+      <div class="field"><label for="username">Username</label><input type="text" id="username" autocomplete="username" placeholder="e.g. shauryachr"><div class="hint">3–30 chars: letters, numbers, underscore.</div></div>
+      <button type="button" class="btn" id="signupBtn">Create account</button>
+      <div class="footer-link">Already have an account? <a href="login.html">Log in</a></div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (function(){
+    var STATUS=document.getElementById('status'),MSG=document.getElementById('msg'),BTN=document.getElementById('signupBtn');
+    var URL='https://ktoyxbqybthleiiiiruv.supabase.co';
+    var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b3l4YnF5YnRobGVpaWlpcnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNjgxMTEsImV4cCI6MjEwODk0NDExMX0.WXG-PEHLQemBthQNgiY8h4xPww-96cxUT2nPnOo1NH4';
+    var client=null;
+    function showError(t){MSG.className='error';MSG.textContent=t}
+    function showOk(t){MSG.className='ok';MSG.textContent=t}
+    function clearMsg(){MSG.className='';MSG.textContent=''}
+    function init(){
+      if(typeof window.supabase==='undefined'||!window.supabase.createClient){STATUS.textContent='CDN failed';showError('Check internet / ad-blocker and refresh.');BTN.disabled=true;return false}
+      try{client=window.supabase.createClient(URL,KEY);STATUS.textContent='Ready';return true}
+      catch(e){STATUS.textContent='Client error';showError(e.message);BTN.disabled=true;return false}
+    }
+    function doSignup(){
+      clearMsg();
+      if(!client&&!init())return;
+      var email=(document.getElementById('email').value||'').trim();
+      var password=document.getElementById('password').value||'';
+      var full_name=(document.getElementById('name').value||'').trim();
+      var username=(document.getElementById('username').value||'').trim().toLowerCase();
+      var dob=document.getElementById('birthday').value||null;
+      if(!email||!password){showError('Enter email and password.');return}
+      if(password.length<8){showError('Password must be at least 8 characters.');return}
+      if(!full_name){showError('Enter your name.');return}
+      if(!/^[a-z0-9_]{3,30}$/.test(username)){showError('Username: 3–30 chars, lowercase letters, numbers, underscore only.');return}
+      BTN.disabled=true;BTN.textContent='Creating…';STATUS.textContent='Creating…';
+      client.auth.signUp({email:email,password:password,options:{data:{username:username,full_name:full_name}}}).then(function(r){
+        if(r.error){showError(r.error.message);BTN.disabled=false;BTN.textContent='Create account';STATUS.textContent='Ready';return}
+        if(r.data&&r.data.session&&r.data.user){
+          return client.from('profiles').update({full_name:full_name,dob:dob,username:username}).eq('id',r.data.user.id).then(function(){
+            showOk('Account created! Redirecting…');STATUS.textContent='Logged in';
+            setTimeout(function(){window.location.href='dash.html'},500);
+          });
+        }
+        showOk('Account created. Check your email to verify, then log in.');STATUS.textContent='Check email';BTN.disabled=false;BTN.textContent='Create account';
+      }).catch(function(e){showError(e.message||'Signup failed');BTN.disabled=false;BTN.textContent='Create account';STATUS.textContent='Ready'});
+    }
+    BTN.addEventListener('click',doSignup);
+    document.getElementById('username').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSignup()}});
+    document.getElementById('password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSignup()}});
+    function boot(){
+      if(typeof window.supabase!=='undefined'){init();if(client)client.auth.getSession().then(function(r){if(r.data&&r.data.session)window.location.href='dash.html'})}
+      else setTimeout(function(){if(typeof window.supabase!=='undefined')init();else{STATUS.textContent='CDN not loaded';showError('Script blocked. Disable ad-blocker and refresh.')}},900);
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  })();
+  </script>
+</body>
+</html>
